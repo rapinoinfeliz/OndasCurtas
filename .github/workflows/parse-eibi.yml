@@ -1,0 +1,60 @@
+name: Parse EiBi → transmissoes.json
+
+on:
+  schedule:
+    # Sexta 12:00 UTC — atualiza a cada 2 semanas (temporadas mudam em mar/out)
+    - cron: '0 12 * * 5'
+  workflow_dispatch:
+    inputs:
+      local_csv:
+        description: 'Path to local EiBi CSV (leave empty to download automatically)'
+        required: false
+        default: ''
+      season_url:
+        description: 'Custom URL for EiBi CSV (leave empty for auto-detection)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: eibi-data-refresh
+  cancel-in-progress: false
+
+jobs:
+  parse-eibi:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Parse EiBi → transmissoes.json
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.local_csv }}" ]; then
+            ARGS="--local ${{ github.event.inputs.local_csv }}"
+          fi
+          if [ -n "${{ github.event.inputs.season_url }}" ]; then
+            ARGS="$ARGS --url ${{ github.event.inputs.season_url }}"
+          fi
+          python scripts/parse_eibi.py --out site/data/transmissoes.json $ARGS
+
+      - name: Commit data changes
+        run: |
+          if git diff --quiet -- site/data/transmissoes.json; then
+            echo "No data changes."
+            exit 0
+          fi
+
+          git config user.name "ondascurtas-bot"
+          git config user.email "ondascurtas-bot@users.noreply.github.com"
+          git add -f site/data/transmissoes.json
+          git commit -m "chore: update EiBi transmissoes.json ($(date -u +%Y-%m-%dT%H:%MUTC))"
+          git pull --rebase origin "${GITHUB_REF_NAME:-main}"
+          git push

@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ondas Curtas — Calendário de Rádio HF</title>
+    <meta name="description" content="Calendário de transmissões de rádio em ondas curtas (shortwave/HF). Veja quais estações estão no ar agora, filtre por banda, idioma e país de origem." />
+    <meta property="og:title" content="Ondas Curtas — Calendário de Rádio HF" />
+    <meta property="og:description" content="Transmissões shortwave/HF em tempo real. Filtre por banda, idioma, país. Indicador de propagação." />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <main class="app">
+      <header class="site-header reveal" aria-label="Cabeçalho do Ondas Curtas">
+        <div class="header-main">
+          <div class="header-title-block">
+            <h1 id="headerTitle" class="header-title">Ondas Curtas</h1>
+            <p class="header-subtitle">
+              <span id="headerSubtitlePrefix">Calendário HF/Shortwave</span>
+              <span class="subtitle-updated-extra">
+                &nbsp;· dados <span id="updatedAt">carregando...</span>
+                <span class="subtitle-season" id="headerSeason"></span>
+              </span>
+            </p>
+          </div>
+
+          <div class="header-meta">
+            <div class="live-badge" id="onAirBadge">
+              <span class="live-dot"></span>
+              <strong id="headerTxCount">-</strong>
+              <span id="headerCountLabel">no ar</span>
+            </div>
+
+            <div class="utc-clock" id="utcClock" title="Horário UTC atual">
+              <span class="utc-clock-label">UTC</span>
+              <span class="utc-clock-time" id="utcClockTime">--:--</span>
+            </div>
+
+            <button
+              id="themeToggleBtn"
+              class="theme-toggle-btn"
+              type="button"
+              aria-pressed="false"
+              aria-label="Ativar modo escuro"
+              title="Ativar modo escuro"
+            >
+              <span class="theme-toggle-track" aria-hidden="true">
+                <span class="theme-toggle-thumb"></span>
+                <span class="theme-toggle-icon theme-toggle-icon--sun">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2.3M12 19.7V22M2 12h2.3M19.7 12H22M4.93 4.93l1.63 1.63M17.44 17.44l1.63 1.63M4.93 19.07l1.63-1.63M17.44 6.56l1.63-1.63"></path>
+                  </svg>
+                </span>
+                <span class="theme-toggle-icon theme-toggle-icon--moon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3a7.2 7.2 0 0 0 9.79 9.79z"></path>
+                  </svg>
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ticker: transmissões no ar agora / próximas -->
+        <div class="ticker-row">
+          <div class="ticker-label">
+            <span class="ticker-label-dot"></span>
+            <span id="tickerLabelText">No ar agora</span>
+          </div>
+          <div class="ticker-track-wrap">
+            <div id="tickerTrack" class="ticker-track" aria-live="polite"></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Filtros -->
+      <section class="filters card reveal">
+        <div class="filters-top-row">
+          <div class="grid-filters">
+
+            <!-- Filtro: País de origem -->
+            <section class="field field--dropdown">
+              <details class="multi-dropdown" id="paisDropdown">
+                <summary>
+                  <span class="multi-summary-text" id="paisDropdownSummary">País de origem</span>
+                  <button
+                    type="button"
+                    class="multi-clear-btn"
+                    data-dropdown="pais"
+                    aria-label="Limpar filtro de país"
+                    hidden
+                  >×</button>
+                  <span class="multi-summary-arrow" aria-hidden="true">▾</span>
+                </summary>
+                <div class="multi-dropdown-panel">
+                  <div id="paisDropdownOptions" class="multi-dropdown-options"></div>
+                </div>
+              </details>
+            </section>
+
+            <!-- Filtro: Idioma -->
+            <section class="field field--dropdown">
+              <details class="multi-dropdown" id="idiomaDropdown">
+                <summary>
+                  <span class="multi-summary-text" id="idiomaDropdownSummary">Idioma</span>
+                  <button
+                    type="button"
+                    class="multi-clear-btn"
+                    data-dropdown="idioma"
+                    aria-label="Limpar filtro de idioma"
+                    hidden
+                  >×</button>
+                  <span class="multi-summary-arrow" aria-hidden="true">▾</span>
+                </summary>
+                <div class="multi-dropdown-panel">
+                  <div id="idiomaDropdownOptions" class="multi-dropdown-options"></div>
+                </div>
+              </details>
+            </section>
+
+            <!-- Filtro: Área alvo -->
+            <section class="field field--dropdown">
+              <details class="multi-dropdown" id="areaDropdown">
+                <summary>
+                  <span class="multi-summary-text" id="areaDropdownSummary">Área alvo</span>
+                  <button
+                    type="button"
+                    class="multi-clear-btn"
+                    data-dropdown="area"
+                    aria-label="Limpar filtro de área"
+                    hidden
+                  >×</button>
+                  <span class="multi-summary-arrow" aria-hidden="true">▾</span>
+                </summary>
+                <div class="multi-dropdown-panel">
+                  <div id="areaDropdownOptions" class="multi-dropdown-options"></div>
+                </div>
+              </details>
+            </section>
+          </div>
+
+          <label class="field field--search">
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="Buscar por estação, idioma ou área"
+              aria-label="Buscar por estação, idioma ou área"
+            />
+          </label>
+        </div>
+
+        <!-- Filtros rápidos de banda -->
+        <div class="filters-bottom-row">
+          <div class="band-buttons" id="bandButtons" aria-label="Filtros por banda de frequência">
+            <button class="band-filter-btn band-tag band-tag--120m" type="button" data-banda="120m">120m</button>
+            <button class="band-filter-btn band-tag band-tag--90m"  type="button" data-banda="90m">90m</button>
+            <button class="band-filter-btn band-tag band-tag--75m"  type="button" data-banda="75m">75m</button>
+            <button class="band-filter-btn band-tag band-tag--60m"  type="button" data-banda="60m">60m</button>
+            <button class="band-filter-btn band-tag band-tag--49m"  type="button" data-banda="49m">49m</button>
+            <button class="band-filter-btn band-tag band-tag--41m"  type="button" data-banda="41m">41m</button>
+            <button class="band-filter-btn band-tag band-tag--31m"  type="button" data-banda="31m">31m</button>
+            <button class="band-filter-btn band-tag band-tag--25m"  type="button" data-banda="25m">25m</button>
+            <button class="band-filter-btn band-tag band-tag--22m"  type="button" data-banda="22m">22m</button>
+            <button class="band-filter-btn band-tag band-tag--19m"  type="button" data-banda="19m">19m</button>
+            <button class="band-filter-btn band-tag band-tag--16m"  type="button" data-banda="16m">16m</button>
+            <button class="band-filter-btn band-tag band-tag--13m"  type="button" data-banda="13m">13m</button>
+            <button class="band-filter-btn band-tag band-tag--11m"  type="button" data-banda="11m">11m</button>
+          </div>
+
+          <div class="filter-actions">
+            <button
+              id="clearFiltersBtn"
+              class="clear-filters-btn"
+              type="button"
+              hidden
+              aria-label="Limpar todos os filtros"
+              title="Limpar todos os filtros"
+            ><span aria-hidden="true">✕</span></button>
+
+            <button
+              class="favorites-filter-btn"
+              id="favoritesToggleBtn"
+              type="button"
+              aria-pressed="false"
+              aria-label="Mostrar apenas favoritas"
+              title="Mostrar apenas favoritas"
+            >
+              <span class="favorites-filter-icon" id="favoritesToggleIcon" aria-hidden="true">☆</span>
+              <span id="favoritesToggleCount" class="favorites-filter-count">0</span>
+            </button>
+
+            <!-- Toggle: somente no ar agora -->
+            <button
+              id="onAirToggleBtn"
+              class="on-air-toggle-btn"
+              type="button"
+              aria-pressed="false"
+              aria-label="Mostrar somente transmissões no ar agora"
+              title="Somente no ar agora"
+            >
+              <span class="live-dot live-dot--btn"></span>
+              <span>Agora</span>
+            </button>
+
+            <!-- Toggle: grade horária -->
+            <button
+              id="scheduleToggleBtn"
+              class="schedule-filter-btn"
+              type="button"
+              aria-pressed="false"
+              aria-expanded="false"
+              aria-label="Mostrar grade horária"
+              title="Grade horária"
+            >
+              <svg class="schedule-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="3" y1="15" x2="21" y2="15"></line>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+                <line x1="15" y1="3" x2="15" y2="21"></line>
+              </svg>
+            </button>
+
+            <!-- Toggle: Mapa -->
+            <button
+              id="mapToggleBtn"
+              class="map-filter-btn"
+              type="button"
+              aria-pressed="false"
+              aria-expanded="false"
+              aria-label="Mostrar mapa de transmissores"
+              title="Mapa de Transmissores"
+            >
+              <svg class="map-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grade horária semanal -->
+      <section id="scheduleOverview" class="schedule-overview card reveal" hidden>
+        <div class="schedule-head">
+          <h2>Grade Horária <span class="schedule-head-tz">UTC</span></h2>
+          <span id="scheduleHint" class="schedule-hint">carregando...</span>
+        </div>
+        <div id="scheduleGrid" class="schedule-grid" aria-label="Grade de transmissões por hora UTC"></div>
+      </section>
+
+      <!-- Mapa de Transmissores -->
+      <section id="mapSection" class="map-section card reveal" hidden>
+        <div class="map-head">
+          <h2>Mapa de Transmissores</h2>
+          <span id="mapHint" class="map-hint">Mostrando locais de transmissão ativos</span>
+        </div>
+        <div id="mapContainer" class="map-container" aria-label="Mapa interativo dos transmissores"></div>
+      </section>
+
+      <!-- Lista de transmissões -->
+      <section class="results reveal">
+        <div id="txList" class="tx-list" aria-live="polite"></div>
+        <div id="loadMoreSentinel" class="load-sentinel" hidden aria-live="polite">Carregando mais transmissões...</div>
+      </section>
+    </main>
+
+    <!-- Template de card de transmissão -->
+    <template id="txTemplate">
+      <article class="tx-card tx-card-new">
+        <div class="card-inner">
+          <!-- Cabeçalho: frequência + banda + badge NO AR -->
+          <div class="card-top">
+            <div class="card-freq">
+              <span class="freq-khz"></span>
+              <span class="freq-unit">kHz</span>
+              <span class="freq-banda"></span>
+            </div>
+            <div class="card-top-meta">
+              <span class="on-air-badge" hidden>
+                <span class="live-dot live-dot--sm"></span>NO AR
+              </span>
+              <span class="tx-potencia"></span>
+            </div>
+          </div>
+
+          <!-- Nome da estação e estrela -->
+          <div class="card-name-row">
+            <h3 class="card-name">
+              <a href="#" class="card-estacao-name" title="Ouvir no WebSDR"></a>
+            </h3>
+            <button
+              class="favorite-btn"
+              type="button"
+              aria-label="Adicionar aos favoritos"
+              title="Favoritar"
+            >☆</button>
+          </div>
+
+          <!-- Horário UTC + local -->
+          <div class="card-schedule">
+            <svg class="sched-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="sched-utc"></span>
+            <span class="sched-local-wrap" hidden>
+              <span class="sched-sep">·</span>
+              <span class="sched-local"></span>
+              <span class="sched-tz"></span>
+            </span>
+          </div>
+
+          <!-- Dias da semana -->
+          <div class="card-days">
+            <span class="day-chip" data-day="0">Seg</span>
+            <span class="day-chip" data-day="1">Ter</span>
+            <span class="day-chip" data-day="2">Qua</span>
+            <span class="day-chip" data-day="3">Qui</span>
+            <span class="day-chip" data-day="4">Sex</span>
+            <span class="day-chip" data-day="5">Sáb</span>
+            <span class="day-chip" data-day="6">Dom</span>
+          </div>
+
+          <!-- Footer: país + idioma + área alvo -->
+          <div class="card-footer">
+            <div class="card-meta-tags">
+              <span class="meta-tag meta-tag--pais">
+                <span class="card-pais-flag"></span>
+                <span class="card-pais-name"></span>
+              </span>
+              <span class="meta-tag meta-tag--idioma"></span>
+              <span class="meta-tag meta-tag--area"></span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <button
+      id="backToTopBtn"
+      class="back-to-top"
+      type="button"
+      hidden
+      aria-label="Voltar ao topo"
+      title="Voltar ao topo"
+    >↑</button>
+
+    <!-- Modal do SDR -->
+    <dialog id="sdrModal" class="sdr-modal">
+      <div class="sdr-modal-header">
+        <div class="sdr-modal-title">
+          <span id="sdrTitleFreq" class="sdr-title-freq">--- kHz</span>
+          <span id="sdrTitleStation" class="sdr-title-station">---</span>
+        </div>
+        <button type="button" id="sdrCloseBtn" class="sdr-close-btn" aria-label="Fechar rádio">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="sdr-modal-body">
+        <iframe id="sdrIframe" src="about:blank" frameborder="0" allow="autoplay"></iframe>
+      </div>
+    </dialog>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
