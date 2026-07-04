@@ -348,6 +348,12 @@ function persistFavorites() { writeStorageJson(FAVORITES_STORAGE_KEY, Array.from
 function syncFavoritesToggleButton() {
   const active = !!state.filters.onlyFavorites;
   if (elements.favoritesToggleIcon) elements.favoritesToggleIcon.textContent = active ? '★' : '☆';
+  updateFavoritesCount();
+}
+function updateFavoritesCount() {
+  if (elements.favoritesToggleCount) {
+    elements.favoritesToggleCount.textContent = state.favorites.size;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -357,7 +363,11 @@ function createTxCardElement(tx) {
   const tmpl = elements.txTemplate.content.cloneNode(true);
   const card = tmpl.querySelector('.tx-card');
   const onAir = isOnAirNow(tx);
-  if (onAir) card.classList.add('tx-card--on-air');
+  if (onAir) {
+    card.classList.add('tx-card--on-air');
+    const badge = tmpl.querySelector('.on-air-badge');
+    if (badge) badge.hidden = false;
+  }
 
   tmpl.querySelector('.freq-khz').textContent = tx.freq_khz;
   const bandaEl = tmpl.querySelector('.freq-banda');
@@ -407,6 +417,7 @@ function createTxCardElement(tx) {
       if (state.filters.onlyFavorites && !nowFav) {
         renderAll();
       }
+      updateFavoritesCount();
     });
   }
   
@@ -455,6 +466,20 @@ function createTxCardElement(tx) {
         chip.classList.add('day-chip--active');
       }
     });
+  }
+
+  // Horário local
+  const localWrap = tmpl.querySelector('.sched-local-wrap');
+  const localEl = tmpl.querySelector('.sched-local');
+  const tzEl = tmpl.querySelector('.sched-tz');
+  if (localWrap && localEl && tx.hora_inicio_utc && tx.hora_fim_utc) {
+    const localStart = utcHhmmToLocal(tx.hora_inicio_utc);
+    const localEnd = utcHhmmToLocal(tx.hora_fim_utc);
+    if (localStart && localEnd) {
+      localEl.textContent = `${localStart} – ${localEnd}`;
+      if (tzEl) tzEl.textContent = localTzAbbr();
+      localWrap.hidden = false;
+    }
   }
 
   return card;
@@ -833,17 +858,6 @@ function renderScheduleGrid(filteredTx) {
 function setScheduleCollapsed(collapsed) {
   state.schedule.collapsed = !!collapsed;
   if (elements.scheduleOverview) elements.scheduleOverview.hidden = !!collapsed;
-  
-  if (elements.mapToggleBtn) {
-    elements.mapToggleBtn.addEventListener('click', () => {
-      const isExpanded = elements.mapToggleBtn.getAttribute('aria-expanded') === 'true';
-      elements.mapToggleBtn.setAttribute('aria-expanded', String(!isExpanded));
-      elements.mapSection.hidden = isExpanded;
-      if (!isExpanded && state.map) {
-        state.map.invalidateSize();
-      }
-    });
-  }
 
   if (elements.scheduleToggleBtn) {
     elements.scheduleToggleBtn.classList.toggle('schedule-filter-btn--active', !collapsed);
@@ -938,7 +952,7 @@ function renderMapMarkers(filteredTx) {
       fillOpacity: 0.7
     });
 
-    const sortedTxs = [...txs].sort((a, b) => a.freq - b.freq);
+    const sortedTxs = [...txs].sort((a, b) => (a.freq_khz || 0) - (b.freq_khz || 0));
     
     const popupContainer = document.createElement('div');
     popupContainer.className = 'map-popup';
@@ -1031,7 +1045,10 @@ function bindEvents() {
   
   // SDR Modal
   elements.sdrCloseBtn?.addEventListener('click', closeSdrModal);
-  elements.sdrModal?.addEventListener('close', closeSdrModal);
+  elements.sdrModal?.addEventListener('close', () => {
+    // Dialog already closed (e.g. Escape key) — just clean up the iframe
+    if (elements.sdrIframe) elements.sdrIframe.src = 'about:blank';
+  });
   elements.sdrModal?.addEventListener('click', e => {
     if (e.target === elements.sdrModal) closeSdrModal(); // Close on backdrop click
   });

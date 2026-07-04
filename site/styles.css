@@ -1141,6 +1141,10 @@ html[data-theme='dark'] .tx-card--on-air {
 /* --------------------------------------------------------------------------
    11. Responsive
    -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .grid-filters { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 640px) {
   .app { padding: 0 0.6rem 2rem; }
 
@@ -1155,13 +1159,6 @@ html[data-theme='dark'] .tx-card--on-air {
 
   .band-buttons { gap: 0.25rem; }
   .band-filter-btn { font-size: 0.7rem; padding: 0.15em 0.5em; }
-
-  .tx-list { grid-template-columns: 1fr; }
-  .band-cards { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 900px) {
-  .grid-filters { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* --------------------------------------------------------------------------
@@ -1179,28 +1176,28 @@ html[data-theme='dark'] .tx-card--on-air {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: var(--surface-1);
+  background: var(--surface);
 }
 
 .map-head h2 {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
-  color: var(--text-base);
+  color: var(--text);
 }
 
 .map-hint {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .map-container {
   height: 400px;
   width: 100%;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-color);
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
   background: var(--surface-2);
-  z-index: 1; /* Para não sobrepor modals/dropdowns */
+  z-index: 1;
 }
 
 /* Fix leaflet z-index leaking over standard UI */
@@ -1218,21 +1215,21 @@ html[data-theme='dark'] .tx-card--on-air {
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   background: var(--surface-2);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
+  border: 1px solid var(--border);
+  color: var(--muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .map-filter-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-base);
+  background: var(--surface-2);
+  color: var(--text);
 }
 .map-filter-btn[aria-expanded="true"] {
-  background: var(--brand-blue);
+  background: var(--mid-band);
   color: white;
-  border-color: var(--brand-blue);
+  border-color: var(--mid-band);
 }
 .map-filter-icon {
   width: 1.25rem;
@@ -1247,28 +1244,26 @@ html[data-theme='dark'] .tx-card--on-air {
 
 /* Force mobile layout for cards inside Leaflet popup */
 .tx-card--popup {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-  gap: 0.75rem;
   padding: 1rem;
 }
 .tx-card--popup .card-main {
   grid-column: 1;
 }
-.tx-card--popup /* ---------------------------------------------------------------------------
+
+/* ---------------------------------------------------------------------------
    SDR Modal
    --------------------------------------------------------------------------- */
 .sdr-modal {
   padding: 0;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
   width: 90vw;
   max-width: 1000px;
   max-height: 85vh;
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   overflow: hidden;
-  color: var(--text-base);
+  color: var(--text);
 }
 
 .sdr-modal::backdrop {
@@ -1282,7 +1277,7 @@ html[data-theme='dark'] .tx-card--on-air {
   justify-content: space-between;
   padding: 1rem 1.25rem;
   background: var(--surface-2);
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
 }
 
 .sdr-modal-title {
@@ -1292,25 +1287,25 @@ html[data-theme='dark'] .tx-card--on-air {
 }
 
 .sdr-title-freq {
-  font-family: var(--font-mono);
+  font-family: var(--mono);
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--brand-blue);
+  color: var(--mid-band);
 }
 
 .sdr-title-station {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-base);
+  color: var(--text);
 }
 
 .sdr-close-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--muted);
   cursor: pointer;
   padding: 0.25rem;
-  border-radius: var(--radius-sm);
+  border-radius: var(--r-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1318,8 +1313,8 @@ html[data-theme='dark'] .tx-card--on-air {
 }
 
 .sdr-close-btn:hover {
-  background: var(--surface-hover);
-  color: var(--text-base);
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .sdr-modal-body {
@@ -1332,24 +1327,41 @@ html[data-theme='dark'] .tx-card--on-air {
   width: 100%;
   height: 100%;
   display: block;
+  border: 0;
 }
 
-.tx-card--on-air .tx-card--on-air 
+@media (max-width: 640px) {
+  .sdr-modal {
+    width: 98vw;
+    max-height: 90vh;
+  }
+  .sdr-modal-body {
+    height: calc(90vh - 60px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Station name link (SDR)
+   --------------------------------------------------------------------------- */
 .card-estacao-name {
-  color: var(--text-base);
+  color: var(--text);
   text-decoration: none;
   border-bottom: 1px dashed transparent;
   transition: all 0.2s;
+  cursor: default;
+}
+
+.card-estacao-name[href] {
   cursor: pointer;
 }
 
-.card-estacao-name:hover {
-  color: var(--brand-blue);
-  border-bottom-color: var(--brand-blue);
+.card-estacao-name[href]:hover {
+  color: var(--mid-band);
+  border-bottom-color: var(--mid-band);
 }
 
 .sdr-link--on-air {
-  color: var(--brand-blue);
+  color: var(--mid-band);
   font-weight: 700;
 }
 
@@ -1358,37 +1370,40 @@ html[data-theme='dark'] .tx-card--on-air {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background-color: var(--brand-blue);
+  background-color: var(--accent);
   border-radius: 50%;
   margin-right: 6px;
   vertical-align: middle;
-  box-shadow: 0 0 4px var(--brand-blue);
+  box-shadow: 0 0 4px var(--accent);
   animation: pulse-sdr 2s infinite;
 }
 
 @keyframes pulse-sdr {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.9); }
+  0%   { opacity: 1; transform: scale(1); }
+  50%  { opacity: 0.5; transform: scale(0.85); }
   100% { opacity: 1; transform: scale(1); }
 }
 
-.favorite-btn:hover {
-  color: var(--warning-color, #eab308);
-}
-.favorite-btn--active {
-  color: var(--warning-color, #eab308);
-  text-shadow: 0 0 8px rgba(234, 179, 8, 0.4);
-}
-
+/* ---------------------------------------------------------------------------
+   Favorite button (star)
+   --------------------------------------------------------------------------- */
 .favorite-btn {
   background: transparent;
   border: none;
-  font-size: 1.15rem;
-  color: var(--border-color);
+  font-size: 1.1rem;
+  color: var(--muted);
   cursor: pointer;
   transition: all 0.2s;
   padding: 0 0 0 8px;
-  margin-top: -2px;
   flex-shrink: 0;
   line-height: 1;
+}
+
+.favorite-btn:hover {
+  color: var(--warn, #eab308);
+}
+
+.favorite-btn--active {
+  color: var(--warn, #eab308);
+  text-shadow: 0 0 6px rgba(234, 179, 8, 0.3);
 }

@@ -1,0 +1,34 @@
+# Dependências
+node_modules/
+
+# Logs
+*.log
+
+# Arquivos de teste/scratch
+test_*.js
+test_*.py
+check_*.py
+fix_*.py
+inject_*.py
+make_coords.py
+map_logic.js
+scratch.js
+modal_test.png
+site/scratch.js
+site/test.js
+site/test2.js
+site/server.log
+site/fix_*.py
+site/update_eibi_dict.py
+
+# Dados brutos (já processados em JSON)
+aoki.txt
+hfcc.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
